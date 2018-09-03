@@ -2,8 +2,6 @@
 
 The collections endpoint is used for navigating collections. A collection contains metadata for the collection itself and an array of members.  Each member is either a collection or the metadata for a document.
 
-The hierarchy of collections is not fixed.  One server might provide all documents in a flat collection or a collection hierarchy organized by geography, time, or any other convenient logical grouping.
-
 DTS does not specify URLs. Clients should discover URLs using navigation and link relations since URLs may differ among implementations.
 
 ### Hydra Representation and Hierarchy
@@ -24,14 +22,15 @@ Item properties :
 - `@id` is the identifier of the object (TODO: add language recommending the use of URIs for ids)
 - `@type` is either `Collection` or `Resource`
 - `totalItems` is the number of children contained by the object
-- (Optional) `description` is a string that describes the object. Additional descriptions may be placed in `dts:dublincore` using `dct:description`, e.g. for internationalization.
+- (Required on Resource) `dts:citeDepth` declare the maximum depth of a readable resource.
+- (Optional) `description` is a string that describes the object. Additional descriptions may be placed in `dts:dublincore` using `dc:description`, e.g. for internationalization.
 - (Optional) `member` contains members of the collection
 - (Optional) `dts:dublincore` contains Dublin Core Terms metadata
 - (Optional) `dts:extensions` contains any supplementary information provided by other ontologies/domains
 - (Optional) `dts:references` contains links to the Navigation API route for the object (TODO: mandatory in children of `member`?)
 - (Optional) `dts:passage` contains a link to the Passage API for the object
 - (Optional) `dts:download` contains a link or a list of links to a downloadable format of the object (TODO: decide on link or map of type:URL)
-- (Optional) `tei:refsDecl` holds a list of citation xpath possibles according to TEI Guidelines, see [Sub-collection readable](#sub-collection-readable)
+- (Optional) `dts:citeStructure` holds a declared citation tree, see [Sub-collection readable](#sub-collection-readable)
 
 ## URI 
 
@@ -271,16 +270,15 @@ Although, this is optional, the expansion of `@type:Resource`'s metadata is advi
             "dts:passage": "/api/dts/documents?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
             "dts:references": "/api/dts/navigation?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
             "dts:download": "https://raw.githubusercontent.com/lascivaroma/priapeia/master/data/phi1103/phi001/phi1103.phi001.lascivaroma-lat1.xml",
-            "tei:refsDecl": [
+            "dts:citeDepth": 2,
+            "dts:citeStructure": [
                 {
-                    "tei:matchPattern":  "(\\w+)",
-                    "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1'])",
-                    "@type": "poem"
-                },
-                {
-                    "tei:matchPattern":  "(\\w+)\\.(\\w+)",
-                    "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1']//tei:l[@n='$2'])",
-                    "@type": "line"
+                    "dts:citeType": "poem",
+                    "dts:citeStructure": [
+                        {
+                            "dts:citeType": "line"
+                        }
+                    ]
                 }
             ]
         }
@@ -300,7 +298,7 @@ Although, this is optional, the expansion of `@type:Resource`'s metadata is advi
 | --- | ----- |
 | Content-Type | Content-Type: application/ld+json |
 
-#### Response
+#### Response Example 1
 
 ```json
 {
@@ -337,20 +335,55 @@ Although, this is optional, the expansion of `@type:Resource`'s metadata is advi
     "dts:passage": "/api/dts/documents?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
     "dts:references": "/api/dts/navigation?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
     "dts:download": "https://raw.githubusercontent.com/lascivaroma/priapeia/master/data/phi1103/phi001/phi1103.phi001.lascivaroma-lat1.xml",
-    "tei:refsDecl": [
+    "dts:citeDepth": 2, 
+    "dts:citeStructure": [
         {
-            "tei:matchPattern":  "(\\w+)",
-            "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1'])",
-            "@type": "poem"
-        },
-        {
-            "tei:matchPattern":  "(\\w+)\\.(\\w+)",
-            "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1']//tei:l[@n='$2'])",
-            "@type": "line"
+            "dts:citeType": "poem",
+            "dts:citeStructure": [
+                {
+                    "dts:citeType": "line"
+                }
+            ]
         }
     ]
 }
 ```
+
+#### Response Example 2
+
+```json
+{
+    "@context": {
+        "@vocab": "https://www.w3.org/ns/hydra/core#",
+        "dct": "http://purl.org/dc/terms/",
+        "dts": "https://w3id.org/dts/api#",
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "tei": "http://www.tei-c.org/ns/1.0",
+    },
+    "@id": "https://digitallatin.org/ids/Calpurnius_Siculus-Bucolica",
+    "@type" : "Resource",
+    "title" : "Bucolica",
+    "totalItems": 0,
+    "dts:passage": "/api/dts/documents?id=https://digitallatin.org/ids/Calpurnius_Siculus-Bucolica",
+    "dts:references": "/api/dts/navigation?id=https://digitallatin.org/ids/Calpurnius_Siculus-Bucolica",
+    "dts:download": "https://github.com/sjhuskey/Calpurnius_Siculus/blob/master/editio.xml",
+    "dts:citeDepth": 2, 
+    "dts:citeStructure": [
+        {
+            "dts:citeType": "front"
+        },
+        {
+            "dts:citeType": "poem",
+            "dts:citeStructure": [
+                {
+                    "dts:citeType": "line"
+                }
+            ]
+        }
+    ]
+}
+```
+
 
 ### Paginated sub-collection
 
@@ -449,19 +482,18 @@ Although, this is optional, the expansion of `@type:Resource`'s metadata is advi
     "dts:passage": "/api/dts/documents?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
     "dts:references": "/api/dts/navigation?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1",
     "dts:download": "https://raw.githubusercontent.com/lascivaroma/priapeia/master/data/phi1103/phi001/phi1103.phi001.lascivaroma-lat1.xml",
-    "tei:refsDecl": [
+    "dts:citeDepth": 2, 
+    "dts:citeStructure": [
         {
-            "tei:matchPattern":  "(\\w+)",
-            "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1'])",
-            "@type": "poem"
-        },
-        {
-            "tei:matchPattern":  "(\\w+)\\.(\\w+)",
-            "tei:replacementPattern": "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1']//tei:l[@n='$2'])",
-            "@type": "line"
+            "dts:citeType": "poem",
+            "dts:citeStructure": [
+                {
+                    "dts:citeType": "line"
+                }
+            ]
         }
     ],
-    "members": [
+    "member": [
         {
             "@id" : "urn:cts:latinLit:phi1103.phi001",
             "title" : "Priapeia",
